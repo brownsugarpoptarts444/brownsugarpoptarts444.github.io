@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Vanessa Zapata" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="../../img/favicon.ico">
+    <title>Project 1</title>
+    <meta name="generator" content="Hugo 0.83.1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../../css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="../../"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="../../post/">BLOG</a></li>
+        
+        <li><a href="../../projects/">PROJECTS</a></li>
+        
+        <li><a href="../../resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="../../project/project1/">Project 1</a></strong>
+          </h3>
+        </div>
+ 
+<div class="blog-title">
+          <h4>
+         January 1, 0001 
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>For this project I have selected a ramen rating and a world happiness dataset. The ramen ratings dataset is from "The Ramen Rater, includes 6 variables and was found here <a href="https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-06-04" class="uri">https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-06-04</a>. The variables include the number of the review, the brand of the ramen, the variety of the ramen (flavoring, spice, etc.), the packaging style of the ramen, the ramen’s country of origin, and the star rating out of five.
+The world happiness dataset includes data from Gapminder, found here <a href="https://www.gapminder.org/data/" class="uri">https://www.gapminder.org/data/</a>. The world happiness dataset contains two variables, world happiness score and country. I limited the dataset to only include the happiness score for 2019, the same year from the ramen dataset, to make the data easier to manage. The actual happiness score is obtained from a country’s national average response to the Cantril life ladder question. The original score is scaled from 1 to ten, but it converted to a percentage for this dataset.
+I chose the ramen data first because it seemed interesting and fun to work with. From there I chose something that could easily join through the country variable, and the happiness data stood out to me. I don’t initially expect any correlation among the data, but maybe the countries with the highest rated ramen experience more life satisfaction.</p>
+<pre class="r"><code>library(tidyverse)
+library(dplyr)
+ramen_ratings &lt;- readr::read_csv(&quot;https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-06-04/ramen_ratings.csv&quot;)
+head(ramen_ratings)</code></pre>
+<pre><code>## # A tibble: 6 x 6
+##   review_number brand           variety                      style country stars
+##           &lt;dbl&gt; &lt;chr&gt;           &lt;chr&gt;                        &lt;chr&gt; &lt;chr&gt;   &lt;dbl&gt;
+## 1          3180 Yum Yum         Tem Tem Tom Yum Moo Deng     Cup   Thaila…  3.75
+## 2          3179 Nagatanien      tom Yum Kung Rice Vermicelli Pack  Japan    2   
+## 3          3178 Acecook         Kelp Broth Shio Ramen        Cup   Japan    2.5 
+## 4          3177 Maison de Coree Ramen Gout Coco Poulet       Cup   France   3.75
+## 5          3176 Maruchan        Gotsumori Shio Yakisoba      Tray  Japan    5   
+## 6          3175 Myojo           Chukazanmai Tantanmen        Cup   Japan    3.5</code></pre>
+<pre class="r"><code>happyscore &lt;- read_csv(&quot;hapiscore_whr.csv&quot;)
+happyscore &lt;- happyscore %&gt;% select(1, 16)
+happyscore &lt;- happyscore %&gt;% rename(happy = &quot;2019&quot;)
+head(happyscore)</code></pre>
+<pre><code>## # A tibble: 6 x 2
+##   country      happy
+##   &lt;chr&gt;        &lt;dbl&gt;
+## 1 Afghanistan  0.257
+## 2 Albania      0.488
+## 3 Algeria      0.501
+## 4 Angola      NA    
+## 5 Argentina    0.597
+## 6 Armenia      0.468</code></pre>
+</div>
+<div id="joining" class="section level2">
+<h2>Joining</h2>
+<p>In joining the data I used the inner join, dropping any rows in either dataset without a match. Because I was joining by the country variable, using inner join allowed me to avoid the majority of the NA values in ramen countries where a happiness score wasn’t available or where a country with a happiness score did not have any ramen represented. This mostly sacrificed countries with no ramen represented, which shouldn’t create many issues. The largest loss though, was losing a lot of Taiwan’s ramen scores, as they didn’t have an associated happiness score.</p>
+<pre class="r"><code>happy_ramen &lt;- ramen_ratings %&gt;% inner_join(happyscore, by = &quot;country&quot;)</code></pre>
+</div>
+<div id="tidying" class="section level2">
+<h2>Tidying</h2>
+<p>The data was already tidy so I just displayed some unite and separate functions here. I first connected the brand and its variety by a “/” using“unite”. Next, I separated from that same “/” making the original two columns. Other tidying will be used throughout the rest of the project.</p>
+<pre class="r"><code>temp_happy &lt;- happy_ramen %&gt;% unite(brand, variety, col = &quot;ramen&quot;, 
+    sep = &quot;/&quot;)
+temp_happy %&gt;% separate(ramen, into = c(&quot;brand&quot;, &quot;variety&quot;), 
+    sep = &quot;/&quot;)</code></pre>
+<pre><code>## # A tibble: 2,608 x 7
+##    review_number brand        variety               style country    stars happy
+##            &lt;dbl&gt; &lt;chr&gt;        &lt;chr&gt;                 &lt;chr&gt; &lt;chr&gt;      &lt;dbl&gt; &lt;dbl&gt;
+##  1          3180 Yum Yum      Tem Tem Tom Yum Moo … Cup   Thailand    3.75 0.6  
+##  2          3179 Nagatanien   tom Yum Kung Rice Ve… Pack  Japan       2    0.587
+##  3          3178 Acecook      Kelp Broth Shio Ramen Cup   Japan       2.5  0.587
+##  4          3177 Maison de C… Ramen Gout Coco Poul… Cup   France      3.75 0.666
+##  5          3176 Maruchan     Gotsumori Shio Yakis… Tray  Japan       5    0.587
+##  6          3175 Myojo        Chukazanmai Tantanmen Cup   Japan       3.5  0.587
+##  7          3173 Sapporo Ich… Momosan Ramen Tonkot… Pack  United St…  5    0.694
+##  8          3172 Samlip       Hi-Myon Katsuo Udon   Pack  South Kor…  3.5  0.587
+##  9          3170 Maison de C… Ramen Gout Carbonara  Cup   France      4    0.666
+## 10          3169 Myojo        Mapo Men              Cup   Japan       3.5  0.587
+## # … with 2,598 more rows</code></pre>
+</div>
+<div id="wrangling" class="section level2 tabset tabset-fade tabset-pills">
+<h2>Wrangling</h2>
+<div id="mostly-filter-select-arrange" class="section level3">
+<h3>(mostly) Filter, Select, Arrange</h3>
+<p>Using select, filter, and arrange, the first table shows all of the countries with a five star ramen rating, arranged by their happiness score. Canada is the country with the highest happiness score and 5 star ramen. The second table displays all of the ramen brand + variety combinations from the United States, arranged by their ramen rating. There are 45 ramen brands + variety combinations in the US that earned a 5 star rating. The third table lists countries by their happiness score, Finland has highest happiness score.</p>
+<pre class="r"><code>happy_ramen %&gt;% select(country, happy, stars) %&gt;% filter(stars == 
+    5) %&gt;% arrange(desc(happy))</code></pre>
+<pre><code>## # A tibble: 410 x 3
+##    country       happy stars
+##    &lt;chr&gt;         &lt;dbl&gt; &lt;dbl&gt;
+##  1 Canada        0.723     5
+##  2 Canada        0.723     5
+##  3 Australia     0.722     5
+##  4 Australia     0.722     5
+##  5 Australia     0.722     5
+##  6 Australia     0.722     5
+##  7 Germany       0.708     5
+##  8 United States 0.694     5
+##  9 United States 0.694     5
+## 10 United States 0.694     5
+## # … with 400 more rows</code></pre>
+<pre class="r"><code>happy_ramen %&gt;% group_by(brand) %&gt;% filter(country == &quot;United States&quot;) %&gt;% 
+    arrange(desc(stars)) %&gt;% select(brand, variety, country, 
+    stars)</code></pre>
+<pre><code>## # A tibble: 382 x 4
+## # Groups:   brand [62]
+##    brand         variety                                       country     stars
+##    &lt;chr&gt;         &lt;chr&gt;                                         &lt;chr&gt;       &lt;dbl&gt;
+##  1 Sapporo Ichi… Momosan Ramen Tonkotsu                        United Sta…     5
+##  2 Hakubaku      Shoyu Soy Sauce Flavor Ramen                  United Sta…     5
+##  3 Hakubaku      Tonkotsu Pork Flavor Ramen                    United Sta…     5
+##  4 Nongshim      POP Pot Or Pan Chicken                        United Sta…     5
+##  5 Jinya Ramen … Chicken Wonton Ramen                          United Sta…     5
+##  6 Myojo         Yakisoba Curry Flavor                         United Sta…     5
+##  7 Vite Ramen    Vegan Mushroom Shio                           United Sta…     5
+##  8 Maruchan      Ramen Noodle Soup Creamy Chicken Flavor (New… United Sta…     5
+##  9 Nissin        Cup Noodles Very Veggie Soy Sauce Flavor Ram… United Sta…     5
+## 10 Nissin        Cup Noodle Seafood Ramen Noodle Soup          United Sta…     5
+## # … with 372 more rows</code></pre>
+<pre class="r"><code>happy_ramen %&gt;% select(country, happy) %&gt;% arrange(desc(happy))</code></pre>
+<pre><code>## # A tibble: 2,608 x 2
+##    country     happy
+##    &lt;chr&gt;       &lt;dbl&gt;
+##  1 Finland     0.781
+##  2 Finland     0.781
+##  3 Finland     0.781
+##  4 Netherlands 0.745
+##  5 Netherlands 0.745
+##  6 Netherlands 0.745
+##  7 Netherlands 0.745
+##  8 Netherlands 0.745
+##  9 Netherlands 0.745
+## 10 Netherlands 0.745
+## # … with 2,598 more rows</code></pre>
+</div>
+<div id="group_by-summarize-mutate" class="section level3">
+<h3>Group_By, Summarize, Mutate</h3>
+<p>This first table shows the average ramen rating for all of that country’s ramen. The second table lists the average rating for each ramen brand and their varieties. The third table shows the summary statistics (mean, min, max, median, and sd) for the happiness variable. The highest happiness rating for the countries in this dataset is 0.781 and the lowest is 0.357. The median and the mean are fairly similar, suggesting a somewhat normal distribution. The next table include the number of distinct values for all of the characteristics. Next, is the fairly similar mean and median for the star rating. Last is code showing my addition of a new categorical variable. Using the median happy rating, I went one sd up and one sd down to categorize these values as “med”, most of the values are in this category. Values above this are labeled as high and values below are low.</p>
+<pre class="r"><code>happy_ramen %&gt;% group_by(country) %&gt;% summarise(mean(stars))</code></pre>
+<pre><code>## # A tibble: 35 x 2
+##    country    `mean(stars)`
+##    &lt;chr&gt;              &lt;dbl&gt;
+##  1 Australia           3.26
+##  2 Bangladesh          3.59
+##  3 Brazil              4.04
+##  4 Cambodia            4.2 
+##  5 Canada              2.26
+##  6 China               3.47
+##  7 Colombia            3.29
+##  8 Estonia             3.5 
+##  9 Finland             3.58
+## 10 France              4.19
+## # … with 25 more rows</code></pre>
+<pre class="r"><code>happy_ramen %&gt;% group_by(brand) %&gt;% summarise(mean(stars))</code></pre>
+<pre><code>## # A tibble: 381 x 2
+##    brand           `mean(stars)`
+##    &lt;chr&gt;                   &lt;dbl&gt;
+##  1 1 To 3 Noodles           4   
+##  2 7 Select                 3.62
+##  3 7 Select/Nissin          3.5 
+##  4 A-One                    2.75
+##  5 A1                       3.08
+##  6 ABC                      4.21
+##  7 Acecook                  3.20
+##  8 Adabi                    3.81
+##  9 Ah Lai                   4.75
+## 10 Ajinatori                3   
+## # … with 371 more rows</code></pre>
+<pre class="r"><code>happy_ramen %&gt;% summarise(mean(happy), min(happy), max(happy), 
+    median(happy), sd(happy)) %&gt;% pivot_longer(cols = c(1:5), 
+    names_to = &quot;stat&quot;, values_to = &quot;value&quot;)</code></pre>
+<pre><code>## # A tibble: 5 x 2
+##   stat           value
+##   &lt;chr&gt;          &lt;dbl&gt;
+## 1 mean(happy)   0.594 
+## 2 min(happy)    0.357 
+## 3 max(happy)    0.781 
+## 4 median(happy) 0.587 
+## 5 sd(happy)     0.0691</code></pre>
+<pre class="r"><code>happy_ramen %&gt;% summarise_all(n_distinct) %&gt;% pivot_longer(cols = c(1:7), 
+    names_to = &quot;variable&quot;, values_to = &quot;n_distinct&quot;)</code></pre>
+<pre><code>## # A tibble: 7 x 2
+##   variable      n_distinct
+##   &lt;chr&gt;              &lt;int&gt;
+## 1 review_number       2607
+## 2 brand                381
+## 3 variety             2427
+## 4 style                  9
+## 5 country               35
+## 6 stars                 35
+## 7 happy                 32</code></pre>
+<pre class="r"><code>happy_ramen %&gt;% summarise(median(stars, na.rm = T), mean(stars, 
+    na.rm = T))</code></pre>
+<pre><code>## # A tibble: 1 x 2
+##   `median(stars, na.rm = T)` `mean(stars, na.rm = T)`
+##                        &lt;dbl&gt;                    &lt;dbl&gt;
+## 1                       3.75                     3.69</code></pre>
+<pre class="r"><code>happy_ramen &lt;- happy_ramen %&gt;% mutate(happy_cat = case_when(happy &gt; 
+    0.656 ~ &quot;high&quot;, happy &lt;= 0.656 &amp; 0.518 &lt;= happy ~ &quot;med&quot;, 
+    happy &lt; 0.518 ~ &quot;low&quot;))</code></pre>
+</div>
+</div>
+<div id="visualizing" class="section level2 tabset tabset-fade tabset-pills">
+<h2>Visualizing</h2>
+<div id="ramen-rating-and-country" class="section level3">
+<h3>Ramen Rating and Country</h3>
+<p>This graph displays the average ramen rating per country. This histogram makes it much easier to compare the average ramen rating among the countries, compared to just looking at a table. From here we see that the average rating for each country lies around the overall average ramen rating score of 3.686. We can see the furthest outliers from the average here very clearly as well. The countries with the lowest average ratings of ramen (at or below 3/5 stars) include Canada, Netherlands, New Zealand, Nigeria, and Pakistan. The highest (at or above 4/5 stars) include Brazil, Cambodia, France, Indonesia, Malaysia, and Singapore.</p>
+<pre class="r"><code>happy_ramen %&gt;% group_by(country) %&gt;% summarize(`average ramen rating` = mean(stars, 
+    na.rm = T)) %&gt;% ggplot(aes(country, `average ramen rating`, 
+    fill = country)) + geom_bar(stat = &quot;identity&quot;) + theme(axis.text.x = element_text(angle = 45, 
+    hjust = 1), legend.position = &quot;none&quot;) + ggtitle(&quot;Average Ramen Rating per Country&quot;)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="ramen-rating-and-happiness" class="section level3">
+<h3>Ramen Rating and Happiness</h3>
+<p>This graph is displaying the relationship between the average rating of ramen in a country and their average response of happiness (life fulfillment on scale of 0 to 1). From this scatter plot we see that there in no relationship between the variables, therefore the quality of a country’s ramen and their happiness have no effect on each other. This is even further proven looking at the two countries with the highest and lowest happiness score. Their average ramen rating is very similar, just above and below a rating of 3.5/5 stars. The colors of the graph denote the happiness score category. Each country has it’s own sized dot. While this is hard to read, it was the easiest way to include the most variables I could think of!</p>
+<pre class="r"><code>happy_ramen %&gt;% group_by(country) %&gt;% ggplot(aes(happy, stars, 
+    color = happy_cat, size = country)) + geom_point(stat = &quot;summary&quot;, 
+    fun = mean) + ggtitle(&quot;Country&#39;s Ramen Rating vs Happiness&quot;) + 
+    theme_dark() + scale_x_continuous(breaks = seq(0, 0.8, 0.05))</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="correlation-heatmap" class="section level3">
+<h3>Correlation Heatmap</h3>
+<p>From this correlation heat map we see that the numeric variables are not very correlated with each other. The variables are of course perfectly correlated with themselves. The correlation between the star rating variable and the happiness variable are essentially zero. It was surprising to see higher correlation between the rating variable and the review number. The review number simply denotes the order in which the particular ramen was rated (from 1 to 3180) and I would not expect that to be higher than the other correlations, even by chance. <strong>I unfortunately really only had two comparable numeric variables at this point since the review number variable is really only a list variable. At this point to make the correlation heat map and the PCA work/include more information I added population data for each country from 2019, last minute. The data is also from Gapminder and these is still very little correlation among the variables with this data added</strong></p>
+<pre class="r"><code>population &lt;- read_csv(&quot;population_total.csv&quot;)
+population &lt;- population %&gt;% select(country, &quot;2019&quot;)
+population &lt;- population %&gt;% rename(population = &quot;2019&quot;)
+
+happy_ramen &lt;- happy_ramen %&gt;% inner_join(population, by = &quot;country&quot;)
+
+
+corhap &lt;- happy_ramen %&gt;% select_if(is.numeric) %&gt;% cor(use = &quot;pair&quot;)
+tidycor &lt;- corhap %&gt;% as.data.frame %&gt;% rownames_to_column(&quot;var1&quot;) %&gt;% 
+    pivot_longer(-1, names_to = &quot;var2&quot;, values_to = &quot;correlation&quot;)
+
+tidycor %&gt;% ggplot(aes(var1, var2, fill = correlation)) + geom_tile() + 
+    scale_fill_gradient2(low = &quot;white&quot;, mid = &quot;plum2&quot;, high = &quot;slateblue1&quot;) + 
+    geom_text(aes(label = round(correlation, 2)), color = &quot;black&quot;, 
+        size = 4) + theme(axis.text.x = element_text(angle = 90, 
+    hjust = 1)) + coord_fixed()</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="dimensionality-reduction-pca" class="section level2 tabset tabset-fade tabset-pills">
+<h2>Dimensionality Reduction (PCA)</h2>
+<div id="prepare" class="section level3">
+<h3>Prepare</h3>
+<p>Here we are beginning the PCA in order to understand the structure of this dataset using the numeric variables. In these step the data is being cleaned by first selecting the numeric variables desired. Next it is normalized and scaled. The plot created gives and idea of the PCs and aids in determining the PCs to be used next.</p>
+<pre class="r"><code>happy_ramen1 &lt;- happy_ramen %&gt;% select(-1) %&gt;% na.omit()
+happy_nums &lt;- happy_ramen1 %&gt;% select_if(is.numeric) %&gt;% scale
+rownames(happy_nums) &lt;- happy_ramen1$Name
+happy_pca &lt;- princomp(happy_nums)
+names(happy_pca)</code></pre>
+<pre><code>## [1] &quot;sdev&quot;     &quot;loadings&quot; &quot;center&quot;   &quot;scale&quot;    &quot;n.obs&quot;    &quot;scores&quot;   &quot;call&quot;</code></pre>
+<pre class="r"><code>eigval &lt;- happy_pca$sdev^2
+varprop = round(eigval/sum(eigval), 2)
+ggplot() + geom_bar(aes(y = varprop, x = 1:3), stat = &quot;identity&quot;) + 
+    xlab(&quot;&quot;) + geom_path(aes(y = varprop, x = 1:3)) + geom_text(aes(x = 1:3, 
+    y = varprop, label = round(varprop, 2)), vjust = 1, col = &quot;magenta&quot;, 
+    size = 5) + scale_y_continuous(breaks = seq(0, 0.6, 0.2), 
+    labels = scales::percent) + scale_x_continuous(breaks = 1:10) + 
+    theme_light()</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="interpret-and-summarize-pcs" class="section level3">
+<h3>Interpret and Summarize PCs</h3>
+<p>In keeping PCs with eigenvalues are greater than 1, I kept PC1 and PC2. PC1 and PC2 also have cumulative proportion variance &lt;= 80% (PC2 is very close). The summary of the PCs is below. PC1 is showing a relationship between population and happiness and is uncorrelated with ramen rating. High scores on PC1 mean a high population and low happiness. Low scores mean a lower population and higher happiness. Similarly with PC2, a high score means lower population and happiness but a higher ramen rating (largest magnitude). A low PC2 score would indicate a higher happiness and population with a lower ramen rating.</p>
+<pre class="r"><code>round(cumsum(eigval)/sum(eigval), 2)</code></pre>
+<pre><code>## Comp.1 Comp.2 Comp.3 
+##   0.47   0.81   1.00</code></pre>
+<pre class="r"><code>eigval</code></pre>
+<pre><code>##    Comp.1    Comp.2    Comp.3 
+## 1.4028550 1.0361097 0.5598783</code></pre>
+<pre class="r"><code>summary(happy_pca, loadings = T)</code></pre>
+<pre><code>## Importance of components:
+##                           Comp.1    Comp.2    Comp.3
+## Standard deviation     1.1844218 1.0178947 0.7482502
+## Proportion of Variance 0.4677987 0.3455031 0.1866981
+## Cumulative Proportion  0.4677987 0.8133019 1.0000000
+## 
+## Loadings:
+##            Comp.1 Comp.2 Comp.3
+## stars              0.960  0.279
+## happy      -0.711 -0.171  0.682
+## population  0.702 -0.223  0.676</code></pre>
+</div>
+<div id="visualize" class="section level3">
+<h3>Visualize</h3>
+<p>Here we see from the plotting, that the conclusions from the summary of PC1 and PC2 are true. Especially in the second and third plot we see these opposing relationships.</p>
+<pre class="r"><code>happydf &lt;- data.frame(PC1 = happy_pca$scores[, 1], PC2 = happy_pca$scores[, 
+    2])
+ggplot(happydf, aes(PC1, PC2)) + geom_point(col = &quot;lightskyblue&quot;) + 
+    theme_light()</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>happy_pca$loadings[1:3, 1:2] %&gt;% as.data.frame %&gt;% rownames_to_column %&gt;% 
+    ggplot() + geom_hline(aes(yintercept = 0), lty = 2) + geom_vline(aes(xintercept = 0), 
+    lty = 2) + ylab(&quot;PC2&quot;) + xlab(&quot;PC1&quot;) + geom_segment(aes(x = 0, 
+    y = 0, xend = Comp.1, yend = Comp.2), arrow = arrow(), col = &quot;mediumspringgreen&quot;) + 
+    geom_label(aes(x = Comp.1 * 1.1, y = Comp.2 * 1.1, label = rowname)) + 
+    theme_light()</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-11-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>library(factoextra)
+fviz_pca_biplot(happy_pca)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-11-3.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="score-identification" class="section level3">
+<h3>Score Identification</h3>
+<p>Knowing what a high or low score means for PC1 and PC2, the code below give the identification of the country scoring highest and lowest for both PCs. In confirming with my other plots/data, the conclusions from the PCs do hold up here. For example, India scoring high in PC1 should mean that is has a high population and a low happiness. Both of these are true relative to the rest of the data in the dataset. China as the lowest PC2 score should have a higher happiness and population and a lower ramen rating. China has the highest population, an above average happiness score and a lower than average ramen rating. Overall, the PCA allowed a different understanding of the structure on this data.</p>
+<pre class="r"><code>country &lt;- happy_ramen1$country
+
+happy_pca$scores %&gt;% as.data.frame %&gt;% cbind(country, .) %&gt;% 
+    top_n(3, Comp.1)  #highest PC1</code></pre>
+<pre><code>##   country   Comp.1    Comp.2      Comp.3
+## 1   India 4.481932 1.1847951 -0.05128763
+## 2   India 4.463689 0.7138353 -0.18808477
+## 3   India 4.463689 0.7138353 -0.18808477
+## 4   India 4.481932 1.1847951 -0.05128763</code></pre>
+<pre class="r"><code>happy_pca$scores %&gt;% as.data.frame %&gt;% cbind(country, .) %&gt;% 
+    top_n(3, wt = desc(Comp.1))  #lowest PC1</code></pre>
+<pre><code>##   country    Comp.1     Comp.2   Comp.3
+## 1 Finland -2.381951 -0.4989389 1.378858
+## 2 Finland -2.372830 -0.2634590 1.447256
+## 3 Finland -2.381951 -0.4989389 1.378858</code></pre>
+<pre class="r"><code>happy_pca$scores %&gt;% as.data.frame %&gt;% cbind(country, .) %&gt;% 
+    top_n(3, wt = Comp.2)  #highest PC2</code></pre>
+<pre><code>##   country   Comp.1   Comp.2    Comp.3
+## 1 Myanmar 1.363167 1.751685 -1.587045
+## 2 Myanmar 1.363167 1.751685 -1.587045
+## 3 Myanmar 1.363167 1.751685 -1.587045
+## 4 Myanmar 1.363167 1.751685 -1.587045</code></pre>
+<pre class="r"><code>happy_pca$scores %&gt;% as.data.frame %&gt;% cbind(country, .) %&gt;% 
+    top_n(3, wt = desc(Comp.2))  #lowest PC2</code></pre>
+<pre><code>##   country   Comp.1    Comp.2    Comp.3
+## 1   China 2.811086 -3.942222 0.2163089
+## 2   China 2.811086 -3.942222 0.2163089
+## 3   China 2.811086 -3.942222 0.2163089
+## 4   China 2.811086 -3.942222 0.2163089
+## 5   China 2.811086 -3.942222 0.2163089
+## 6   China 2.811086 -3.942222 0.2163089</code></pre>
+</div>
+</div>
+
+            
+        <hr>         <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div> 
+            </div>
+          </div>
+
+   <hr>  <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div> 
+        </div>
+      </div>
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="../../js/docs.min.js"></script>
+<script src="../../js/main.js"></script>
+
+<script src="../../js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>

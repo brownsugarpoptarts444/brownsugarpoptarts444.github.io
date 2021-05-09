@@ -1,0 +1,28 @@
+---
+title: Hello!
+author: ''
+date: '2021-05-09'
+slug: hello
+categories: []
+tags: []
+description: ''
+---
+I'm not sure what to write here
+
+
+
+[Link to project 1](/project/project1/)
+
+[Link to google](https://www.google.com)
+
+
+```{r}
+2+4
+
+3*7
+```
+
+![](/post/2021-05-09-hello_files/274.JPG)
+
+
+

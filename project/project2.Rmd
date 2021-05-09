@@ -1,0 +1,397 @@
+---
+title: "Project 2"
+author: "Vanessa Zapata"
+date: "5/7/2021"
+output: 
+  html_document:
+    theme: yeti
+    highlight: breezedark
+    toc: true
+    toc_float:
+      collapsed: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+tbi_age <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-03-24/tbi_age.csv')
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(interactions)
+library(sandwich); library(lmtest)
+library(plotROC)
+library(glmnet)
+
+class_diag <- function(probs,truth){ 
+  #CONFUSION MATRIX: CALCULATE ACCURACY, TPR, TNR, PPV 
+  if(is.character(truth)==TRUE) truth<-as.factor(truth) 
+  if(is.numeric(truth)==FALSE & is.logical(truth)==FALSE) truth<-as.numeric(truth)-1 
+  tab<-table(factor(probs>.5,levels=c("FALSE","TRUE")),factor(truth, levels=c(0,1))) 
+  acc=sum(diag(tab))/sum(tab) 
+  sens=tab[2,2]/colSums(tab)[2] 
+  spec=tab[1,1]/colSums(tab)[1] 
+  ppv=tab[2,2]/rowSums(tab)[2] 
+  
+#CALCULATE EXACT AUC 
+  ord<-order(probs, decreasing=TRUE) 
+  probs <- probs[ord]; truth <- truth[ord] 
+  TPR=cumsum(truth)/max(1,sum(truth))  
+  FPR=cumsum(!truth)/max(1,sum(!truth)) 
+  dup <-c(probs[-1]>=probs[-length(probs)], FALSE) 
+  TPR <-c(0,TPR[!dup],1); FPR<-c(0,FPR[!dup],1) 
+  n <- length(TPR) 
+  auc <- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n])) 
+  data.frame(acc,sens,spec,ppv,auc) 
+}
+
+```
+
+## Data Introduction
+
+This dataset looks at data collection from the CDC on traumatic brain injuries. The variables include age group of those injured, type of measure(from emergency visit, death, or hospitalization), mechanism of injury(accidental fall, assault, etc.), estimated number of cases in 2014, and estimated rate / 100,000 cases in 2014. There are a total of 231 observations.
+
+```{r}
+head(tbi_age)
+```
+
+## MANOVA Testing 
+
+I limited the data to not include data from "total" age since that is a combination of all the other age groups already represented. From there, I looked for a significant mean difference in rate and number of injuries for the different mechanisms of injury. This does not take into consideration the age group of the injured or the result of the injury (death, hospitalization, or emergency department visit)
+
+*H0: For both estimated rate and number of injuries, means for each mechanism of injury are equal* 
+
+*HA: For at least one DV, at least one mechanism of injury mean is different*
+
+The test showed significance *(p = 0.0001572)*.
+```{r}
+tbi_manova <- tbi_age %>% select(type, injury_mechanism, number_est, rate_est) %>% na.omit()
+
+man1 <- manova(cbind(rate_est, number_est) ~ injury_mechanism, data = tbi_manova)
+summary(man1)
+summary.aov(man1)
+```
+Through performing one-way ANOVAs for each variable, we see that for both rate *(p = 0.000001781)* and number of injuries *(p = 0.00431)* at least one mechanism of injury mean significantly differs.
+```{r}
+pairwise.t.test(tbi_manova$rate_est, tbi_manova$injury_mechanism, p.adj = "none")
+pairwise.t.test(tbi_manova$number_est, tbi_manova$injury_mechanism, p.adj = "none")
+
+```
+The total number of tests performed was 45 (1 MANOVA + 2 ANOVA + 42 pairwise t tests). With 45 tests, and if left unadjusted, the probability of at least one Type-1 error is 0.901 *(1 - (0.95)^45 = 0.901)*. To account for this, the bonferroni corrected significance level is adjusted to 0.0011 *(α = 0.05/45 = 0.0011)*. 
+
+With this adjustment, we see a significantly different rate of injury comparing Unintentional Falls against Assault, Intentional Self-Harm, Motor Vehicle Crashes, Other or no mechanism specified, Other unintentional injury/mechanism unspecified, and finally Unintentionally struck by or against an object.
+
+We also see a significantly different number of injuries comparing Unintentional Falls against Assault, Intentional Self-Harm, Other or no mechanism specified, Other unintentional injury/mechanism unspecified, and Unintentionally struck by or against an object.
+
+MANOVA assumes random samples, multivariate normality of DVs, homogeneity of within-group covariance matrices, linear relationships among DVs, no extreme univariate or multivariate outliers, and no multicollinearity. Because of the amount and the difficulty in meeting all assumptions, it is unlikely that this data meets all of these assumptions.
+
+
+
+## Randomization Test {.tabset .tabset-fade .tabset-pills}
+
+### Test
+
+There are 3 different methods/departments in which a TBI diagnosis was made, Hospitalizations, ED Visits, and Deaths. Rate of TBI found from deaths is the lowest while rate seems to be much closer/ less distinguishable among hospitalizations and emergency department visits, possibly making it better to investigate here. This mean difference randomization test was performed to see whether traumatic brain injury rate is the same on average from hospitalizations and emergency department visits. This does not take into account the mechanism of injury or age group.
+
+*H0: Mean rate of traumatic brain injury is the same from hospitalizations and emergency department visits* 
+
+*HA: Mean rate of traumatic brain injury is different from hospitalizations and emergency department visits*
+
+
+```{r}
+set.seed(123)
+
+tbi_rand <- tbi_age %>% filter(!type == "Deaths") %>% na.omit()
+
+tbi_rand %>% group_by(type) %>%
+  summarize(means = mean(rate_est)) %>% summarize(`mean_diff`= diff(means))
+
+rand_dist<-vector()
+
+for(i in 1:5000){
+new <- data.frame(rate = sample(tbi_rand$rate_est), type = sample(tbi_rand$type))
+rand_dist[i]<-mean(new[new$type == "Emergency Department Visit",]$rate)-   
+              mean(new[new$type == "Hospitalizations",]$rate)}
+
+
+mean(rand_dist > 121.803 | rand_dist < -121.803)
+
+
+t.test(data = tbi_rand, rate_est~type)
+```
+The p-value (p = 0) for the permutation test corresponds to the probability of observing a mean difference as extreme as the one we got under the randomization distribution, so we reject the null hypothesis that the mean rate of traumatic brain injury is the same from hospitalizations and emergency department visits. The Welch Two Sample t-test confirms this result (p = 0.0000284).
+
+### Plot
+```{r}
+ggplot(tbi_rand, aes(rate_est, fill = type)) + geom_histogram(bins = 6.5) + facet_wrap(~type, ncol = 2) +
+  theme(legend.position ="none")
+
+
+{hist(rand_dist,main="",ylab=""); abline(v = c(-121.8033, 121.8033),col="red")}
+```
+
+
+## Linear Regression {.tabset .tabset-fade .tabset-pills}
+
+
+### Model
+
+First I removed some of the age groups that overlapped, just to reduce the overall number of age groups and make interpreting everything a little easier. I also centered the numeric variable involved in the interaction. This model is looking at the Age Group and Number of Injuries with Interaction on Rate of Injury.
+
+
+(some of the) Coefficient Interpretations:
+- predicted rate of injury for those aged 15-24 with average number of injuries is 68.168. 
+- those aged 35-54 have a predicted rate of injury that is 5.919 higher than those with average number of injuries and that are aged 15-24.
+- those aged 75+ have a predicted rate of injury that is 82.924 higher than those with average number of injuries and that are aged 15-24.
+- for every 1-unit increase in number of injuries, predicted rate of injury goes up 0.0023 for this group
+- slope of number of injuries on rate of injury for people aged 65-74 is 0.0015 greater than for people aged 15-24 
+- slope of number of injuries on rate of injury for people aged 75+ is 0.0028 greater than for people aged 15-24 
+
+```{r}
+tbi_lm <- tbi_age %>% mutate(num_c = number_est - mean(number_est, na.rm = T)) %>% na.omit() %>% filter(!age_group == "Total", !age_group == "0-4", !age_group == "5-14", !age_group == "0-17")
+
+fit1 <- lm(rate_est~age_group*num_c, data = tbi_lm)
+summary(fit1)
+```
+"All" of the variance in the outcome is explained by the model (R^2 = 1). It is actually slightly less than one (1 - 0.00000004136915), but even with the exact number, essentially all of the variance is explained by the model.
+
+```{r}
+SST <- sum((tbi_lm$rate_est-mean(tbi_lm$rate_est))^2)
+SSR <- sum((fit1$fitted.values-mean(tbi_lm$rate_est))^2)
+SSE <- sum(fit1$residuals^2)
+
+SSR/SST
+
+SSE/SST
+```
+
+
+### Plot 
+
+```{r}
+ggplot(tbi_lm, aes(num_c,rate_est, color = age_group)) + geom_smooth(method = "lm", se = F, fullrange = T) + 
+  geom_point() + geom_vline(xintercept=0,lty=2) + geom_vline(xintercept = mean(tbi_lm$number_est))
+```
+
+### Checking Assumptions
+
+Due to the outliers it's kind of difficult to get the full picture but there doesn't appear to be heteroscedasticity or any non-linear relationship. Looking at the histogram there seems to be some aspects of normality, but through using the Shapiro-Wilk normality test we see that the null hypothesis of normality is rejected (p = 0.0015).
+
+```{r}
+resids<-fit1$residuals
+fitvals<-fit1$fitted.values
+
+ggplot()+geom_point(aes(fitvals,resids))+geom_hline(yintercept=0, color='red')
+
+ggplot()+geom_histogram(aes(resids), bins=20)
+ggplot()+geom_qq(aes(sample=resids))+geom_qq_line(aes(sample=resids))
+shapiro.test(resids)
+
+```
+
+### Using Robust SEs
+
+Using the robust standard errors, everything is still significant. Some of the SE values changed, but largely everything is basically all of the values and the relationships are the same. Any changes made, though minimal, are likely to help robust any violations of homoskedasticity.
+
+```{r}
+coeftest(fit1, vcov = vcovHC(fit1))
+```
+
+### Bootstrapped SEs
+
+The bootstrapped SEs are overall slightly larger than the previous SEs. This effect will make the p-values smaller and increase the significance. In practice we would probably choose to use these values over the original. 
+
+```{r}
+set.seed(123)
+
+samp_distn<-replicate(5000, {  
+  boot_dat <- sample_frac(tbi_lm, replace=T)  
+  fit2 <- lm(rate_est~age_group*num_c, data = boot_dat)  
+  coef(fit2) 
+}) 
+
+samp_distn %>% t %>% as.data.frame %>% summarize_all(sd)
+```
+
+## Logistic Regression {.tabset .tabset-fade .tabset-pills}
+
+### Model
+
+(some of the) Coefficient Interpretations:
+- controlling for rate of injury, none of the age groups significantly differ in whether the injury was reported from death or ED visit. 
+- controlling for age group, for every 1-unit increase in rate of injury, odds of report from ED visit over report from death change by a factor of (e^0.00112325) = 1.00112. 
+- odds of report from ED visit in those aged 55-64 are 1.064 times higher than those aged 0-17
+- odds of report from ED visit in those aged 25-34 are 1.051 times higher than those aged 0-17
+
+
+```{r}
+tbi_glm <- tbi_age %>% filter(!type == "Hospitalizations", !age_group == "Total") %>% mutate(y = ifelse(type == "Emergency Department Visit", 1, 0)) %>% na.omit %>%
+  mutate(rate_c = rate_est - mean(rate_est, na.rm = T))
+
+
+fit3 <- glm(y~age_group + rate_c, data = tbi_glm)
+coeftest(fit3)
+```
+
+### Confusion Matrix
+
+Accuracy (proportion of correctly classified cases) = 
+  (67 + 34)/ 132 = 0.765
+
+Sensitivity/TPR (proportion ED visits correctly classified) = 
+  34/65 = 0.523
+  
+Specificity/TNR (proportion of deaths correctly classified) = 
+  67/67 = 1
+  
+Precision/PPV (proportion of malignancies correctly classified) = 
+  34/34 = 1
+
+```{r}
+probs <- predict(fit3, type = "response")
+table(predict = as.numeric(probs > .5), truth = tbi_glm$y) %>% addmargins
+```
+
+### AUC
+
+The area under the curve depicts how well we are predicting overall. From both looking at the curve and the calculated AUC value (0.838) this model is predicting at a level of "Good"! The ROC curve also allows us to visualize trade-off between sensitivity and specificity in a way that Accuracy does not always capture as accurately.
+
+```{r}
+ROCplot <- ggplot(tbi_glm) + geom_roc(aes(d=y, m=probs), n.cuts=0)
+ROCplot
+calc_auc(ROCplot)
+```
+
+### Density Plot
+
+```{r}
+tbi_glm$logit<-predict(fit3,type="link")
+
+tbi_glm %>% mutate(y=as.factor(y)) %>% ggplot() + geom_density(aes(logit, fill=y))
+```
+
+## Logistic Regression with All Variables {.tabset .tabset-fade .tabset-pills}
+
+### Model
+```{r}
+tbi <- tbi_glm %>% select(!rate_est) %>% select(!logit) %>% select(!type)
+
+fit4 <- glm(y~., data = tbi)
+coeftest(fit4)
+```
+
+### Classification Diagnostics
+
+Accuracy (proportion of correctly classified cases) = 
+  (60 + 45)/ 132 = 0.795
+
+Sensitivity/TPR (proportion ED visits correctly classified) = 
+  45/65 = 0.692
+  
+Specificity/TNR (proportion of deaths correctly classified) = 
+  60/67 = 0.896
+  
+Precision/PPV (proportion of malignancies correctly classified) = 
+  45/52 = 0.865
+
+
+The accuracy and sensitivity increased from the previous regression, while the specificity and the precision have decreased.
+  
+  
+From both looking at the curve and the calculated value (0.881) this model is predicting at a "Good" level! This is slightly larger than from the previous regression.
+
+  
+```{r}
+probs2 <- predict(fit4, type = "response")
+table(predict = as.numeric(probs2 > .5), truth = tbi$y) %>% addmargins
+```
+
+```{r}
+ROCplot <- ggplot(tbi) + geom_roc(aes(d=y, m=probs2), n.cuts=0)
+ROCplot
+calc_auc(ROCplot)
+```
+
+### 10-fold CV
+
+AUC = 0.993, this means that the model is predicting at the "Great" level. This is an improvement in predicting ability than the previous question.
+
+```{r}
+set.seed(123)
+k=10
+
+data1<-tbi[sample(nrow(tbi)),] 
+folds<-cut(seq(1:nrow(tbi)),breaks=k,labels=F) 
+
+diags<-NULL
+for(i in 1:k){         
+  train<-data1[folds!=i,] 
+  test<-data1[folds==i,]  
+  
+  truth<-test$y
+  
+  fit4 <- glm(y~., data = tbi, family = "binomial")
+  probs<- predict(fit4, newdata=test, type="response")
+  
+  diags<-rbind(diags,class_diag(probs,truth)) 
+}
+summarize_all(diags,mean)
+```
+
+### LASSO
+
+The non-zero coefficient estimates are age groups 0-4, 15-24, 55-64, 65-74, 75+, and injury mechanisms intentional self harm, motor vehicle crashes, unintentional falls, unintentionally struck by or against an object, and then both number_est and rate_c.
+
+```{r}
+set.seed(123)
+
+y<-as.matrix(tbi$y)
+x<-model.matrix(y~., data = tbi)[,-1] 
+
+cv<-cv.glmnet(x,y,family="binomial")
+lasso<-glmnet(x,y,family="binomial",lambda=cv$lambda.1se)
+coef(lasso)
+
+```
+
+### 10-fold CV from LASSO
+
+This AUC (0.971), is slightly lower than that of the other 10-fold CV, but this is still shows a "Great" level of prediction by this model. This AUC also still shows a greater predicting ability than all the other AUC values prior to the first 10-fold CV.  
+
+```{r}
+lasso_dat <- tbi %>% mutate(injury1 = ifelse(injury_mechanism == "Intentional self-harm", 1, 0)) %>% 
+  mutate(injury2 = ifelse(injury_mechanism == "Motor Vehicle Crashes", 1, 0)) %>%
+  mutate(injury3 = ifelse(injury_mechanism == "Unintentional Falls", 1, 0)) %>%
+  mutate(injury4 = ifelse(injury_mechanism == "Unintentionally struck by or against an object", 1, 0)) %>%
+  mutate(age = ifelse(age_group == "0-4", 1, 0)) %>%
+  mutate(age2 = ifelse(age_group == "15-24", 1, 0)) %>%
+  mutate(age3 = ifelse(age_group == "55-64", 1, 0)) %>%
+  mutate(age4 = ifelse(age_group == "65-74", 1, 0)) %>%
+  mutate(age5 = ifelse(age_group == "75+", 1, 0)) %>% select(!age_group) %>% select(!injury_mechanism)
+
+set.seed(123)
+
+data1<-lasso_dat[sample(nrow(lasso_dat)),] 
+folds<-cut(seq(1:nrow(lasso_dat)),breaks=k,labels=F) 
+
+diags<-NULL
+for(i in 1:k){         
+  train<-data1[folds!=i,] 
+  test<-data1[folds==i,]  
+  
+  truth<-test$y
+  
+  fit <- glm(y~., data=train, family="binomial")
+  probs<- predict(fit, newdata=test, type="response")
+  
+  diags<-rbind(diags,class_diag(probs,truth)) 
+}
+summarize_all(diags,mean)
+```
+
+
+
+
+
+
+
