@@ -21,8 +21,6 @@ I'm not sure what to write here
 
 3*7
 ```
-
-![](/post/2021-05-09-hello_files/274.JPG)
-
+git remote set-url origin https://github.com/brownsugarpoptarts444/brownsugarpoptarts444.github.io.git
 
 
