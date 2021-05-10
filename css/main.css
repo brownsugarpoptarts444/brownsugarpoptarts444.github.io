@@ -4,7 +4,7 @@ html, body {
   background-color: #e9edc9;
   font-family: 'Source Sans Pro', Lucida Sans, sans-serif;
   /* The html and body elements cannot have any padding or margin. */
-  border-top: 2px solid #e9edc9;
+  border-top: 2px solid #f8ad9d;
 }
 
 /* Wrapper for page content to push down footer */
@@ -27,7 +27,7 @@ html, body {
   border-color: #fefae0;
 }
 .navbar-default .navbar-brand {
-  color: #fefae0;
+  color: #f8ad9d;
 }
 .navbar-default .navbar-brand:hover, .navbar-default .navbar-brand:focus {
   color: #fefae0;
@@ -39,7 +39,7 @@ html, body {
   color: #fefae0;
 }
 .navbar-default .navbar-nav > li > a:hover, .navbar-default .navbar-nav > li > a:focus {
-  color: #fefae0;
+  color: #f8ad9d;
 }
 .navbar-default .navbar-nav > .active > a, .navbar-default .navbar-nav > .active > a:hover, .navbar-default .navbar-nav > .active > a:focus {
   color: #fefae0;
@@ -56,7 +56,7 @@ html, body {
   background-color: #ccd5ae;
 }
 .navbar-default .navbar-toggle .icon-bar {
-  background-color: #fefae0;
+  background-color: #f8ad9d;
 }
 .navbar-default .navbar-collapse,
 .navbar-default .navbar-form {
