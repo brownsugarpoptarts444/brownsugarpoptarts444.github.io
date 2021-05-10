@@ -21,6 +21,6 @@ I'm not sure what to write here
 
 3*7
 ```
-git remote set-url origin https://github.com/brownsugarpoptarts444/brownsugarpoptarts444.github.io.git
+
 
 

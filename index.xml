@@ -13,10 +13,10 @@
       <pubDate>Sun, 09 May 2021 00:00:00 +0000</pubDate>
       
       <guid>/post/2021/05/09/hello/</guid>
-      <description>I’m not sure what to write here
+      <description> I’m not sure what to write here
 Link to project 1
 Link to google
-2+4 ## [1] 6 3*7 ## [1] 21 git remote set-url origin https://github.com/brownsugarpoptarts444/brownsugarpoptarts444.github.io.git</description>
+2+4 ## [1] 6 3*7 ## [1] 21 </description>
     </item>
     
     <item>
@@ -56,7 +56,11 @@ head(tbi_age) ## # A tibble: 6 x 5 ## age_group type injury_mechanism number_est
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/resume/</guid>
-      <description>    </description>
+      <description>Vanessa Zapata  vanessa.zapata@utexas.edu github.com/brownsugarpoptarts444   Skills  Organization Empathy Knowing all lyrics to all One Direction songs   Education University of Texas at Austin  B.S.A in Biology | 2021
+ Minor in Sociology
+ Austin, Texas
+    Interests  Intersections of biology and sociology Harry Styles   Experience Work Churro Alley + store associate | 2017
+ Volunteer  North and Central Texas Food Bank  packaging donated goods in warehouse to be distributed to food insecure populations  Heritage Park &amp;amp; Rehab Center, Austin, TX  organizing and playing bingo with nursing home residents     Accomplishments  awarded EMT certification | 2017</description>
     </item>
     
   </channel>
