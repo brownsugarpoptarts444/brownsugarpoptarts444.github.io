@@ -13,10 +13,9 @@
       <pubDate>Sun, 09 May 2021 00:00:00 +0000</pubDate>
       
       <guid>/post/2021/05/09/hello/</guid>
-      <description> I’m not sure what to write here
-Link to project 1
-Link to google
-2+4 ## [1] 6 3*7 ## [1] 21 </description>
+      <description> This is my first time using Python ever. Being introduced to it in this class allowed the first opportunity to get a feeling for what my friends majoring in CS get to do!
+One of the first things we
+library(reticulate) 3*7 ## [1] 21 </description>
     </item>
     
   </channel>

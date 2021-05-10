@@ -7,18 +7,12 @@ categories: []
 tags: []
 description: ''
 ---
-I'm not sure what to write here
+This is my first time using Python ever. Being introduced to it in this class allowed the first opportunity to get a feeling for what my friends majoring in CS get to do! 
 
-
-
-[Link to project 1](/project/project1/)
-
-[Link to google](https://www.google.com)
-
+One of the first things we 
 
 ```{r}
-2+4
-
+library(reticulate)
 3*7
 ```
 
