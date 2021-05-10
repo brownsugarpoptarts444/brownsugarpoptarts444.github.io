@@ -9,13 +9,13 @@
     <lastBuildDate>Sun, 09 May 2021 00:00:00 +0000</lastBuildDate><atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>R and Python Together!</title>
-      <link>/post/2021/05/09/hello/</link>
+      <link>/post/2021/05/09/hi/</link>
       <pubDate>Sun, 09 May 2021 00:00:00 +0000</pubDate>
       
-      <guid>/post/2021/05/09/hello/</guid>
-      <description> This is my first time using Python ever. Being introduced to it in this class allowed the first opportunity to get a feeling for what my friends majoring in CS get to do!
-One of the first things we
-library(reticulate) 3*7 ## [1] 21 </description>
+      <guid>/post/2021/05/09/hi/</guid>
+      <description>This is my first time using Python ever. Being introduced to it in this class allowed me the first opportunity to get a feeling for what my friends majoring in CS get to do!
+One of the first things we learned about was a way to make R and Python interact with eachother, using the reticulate package.
+First, we load the reticulate package and write our first message in R.</description>
     </item>
     
   </channel>

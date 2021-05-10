@@ -1,0 +1,44 @@
+---
+title: R and Python Together!
+author: ''
+date: '2021-05-09'
+slug: hi
+categories: []
+tags: []
+description: ''
+---
+
+This is my first time using Python ever. Being introduced to it in this class allowed me the first opportunity to get a feeling for what my friends majoring in CS get to do! 
+
+
+One of the first things we learned about was a way to make R and Python interact with eachother, using the reticulate package.
+
+
+First, we load the reticulate package and write our first message in R. 
+
+```{r}
+library(reticulate)
+
+first <- "Harry Styles"
+```
+
+Then, we can put our next message in a Python code chunk and print it out! We see that we get the full message "Harry Styles in Dallas!"
+
+```{python}
+second = "in Dallas!"
+print(r.first, second)
+```
+
+
+And we're not limited to seeing the full message in Python. With some modifications we can see the full message using a R code chunk too!
+
+```{r}
+cat(c(first, py$second))
+```
+
+
+Now that we can see the message, here is Harry Styles is Dallas!
+
+![](/post/2021-05-09-hi_files/HSdallas.jpg)
+
+
